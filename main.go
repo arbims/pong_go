@@ -30,6 +30,11 @@ type Target struct {
 	dead bool
 }
 
+type RectTarget struct {
+	target Target
+	rect   sdl.Rect
+}
+
 func create_target_rect() [5][5]Target {
 	target_pool := [5][5]Target{}
 	for j := 1; j < 5; j++ {
@@ -41,15 +46,16 @@ func create_target_rect() [5][5]Target {
 	return target_pool
 }
 
-func draw_target_rect(target_pool *[5][5]Target, renderer *sdl.Renderer) []sdl.Rect {
-	targets_rect := []sdl.Rect{}
+func draw_target_rect(target_pool *[5][5]Target, renderer *sdl.Renderer) []RectTarget {
+	targets_rect := []RectTarget{}
 	for j := 1; j < 5; j++ {
 		for i := 0; i < 5; i++ {
 			if target_pool[i][j].dead == false {
 				target_rect := create_rect(float32(target_pool[i][j].x), float32(target_pool[i][j].y), TARGET_WIDTH, BAR_THIKNESS)
 				renderer.SetDrawColor(0x00, 0xFF, 0x00, 0xFF)
 				renderer.FillRect(&target_rect)
-				targets_rect = append(targets_rect, target_rect)
+				target_with_rect := RectTarget{target_pool[i][j], target_rect}
+				targets_rect = append(targets_rect, target_with_rect)
 			}
 		}
 	}
