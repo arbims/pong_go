@@ -31,11 +31,12 @@ type Target struct {
 }
 
 type RectTarget struct {
-	target Target
+	target *Target
 	rect   sdl.Rect
 }
 
 func create_target_rect() [5][5]Target {
+
 	target_pool := [5][5]Target{}
 	for j := 1; j < 5; j++ {
 		for i := 0; i < 5; i++ {
@@ -54,7 +55,7 @@ func draw_target_rect(target_pool *[5][5]Target, renderer *sdl.Renderer) []RectT
 				target_rect := create_rect(float32(target_pool[i][j].x), float32(target_pool[i][j].y), TARGET_WIDTH, BAR_THIKNESS)
 				renderer.SetDrawColor(0x00, 0xFF, 0x00, 0xFF)
 				renderer.FillRect(&target_rect)
-				target_with_rect := RectTarget{target_pool[i][j], target_rect}
+				target_with_rect := RectTarget{&target_pool[i][j], target_rect}
 				targets_rect = append(targets_rect, target_with_rect)
 			}
 		}
@@ -81,12 +82,13 @@ func main() {
 		fmt.Fprintf(os.Stderr, "Failed to create renderer: %s\n", err)
 	}
 
-	var rect_x float32 = 100
-	var rect_y float32 = 100
 	var rect_dx float32 = 1
 	var rect_dy float32 = 1
 	var bar_y float32 = BAR_Y - BAR_THIKNESS
 	var bar_x float32 = 0
+	var rect_x float32 = bar_x + RECT_SIZE
+	var rect_y float32 = BAR_Y - BAR_THIKNESS/2 - RECT_SIZE
+
 	// var bar_dx float32 = 0
 	Keyboard := sdl.GetKeyboardState()
 
@@ -126,9 +128,17 @@ func main() {
 		renderer.FillRect(&bar_rect)
 
 		rect_nx := rect_x + rect_dx*RECT_SPEED*DELTA_TIME_SEC
-		fmt.Println(targets_rect)
 
 		rect = create_rect(rect_nx, rect_y, RECT_SIZE, RECT_SIZE)
+
+		for i := 0; i < len(targets_rect); i++ {
+			if targets_rect[i].rect.HasIntersection(&rect) {
+				targets_rect[i].target.dead = true
+				rect_dx *= -1
+				rect_nx = rect_x + rect_dx*RECT_SPEED*DELTA_TIME_SEC
+			}
+		}
+
 		if rect_nx < 0 || rect_nx+RECT_SIZE > WINDOW_WIDTH || bar_rect.HasIntersection(&rect) {
 			rect_dx *= -1
 			rect_nx = rect_x + rect_dx*RECT_SPEED*DELTA_TIME_SEC
@@ -137,6 +147,14 @@ func main() {
 
 		rect_ny := rect_y + rect_dy*RECT_SPEED*DELTA_TIME_SEC
 		rect = create_rect(rect_x, rect_ny, RECT_SIZE, RECT_SIZE)
+		for i := 0; i < len(targets_rect); i++ {
+			if targets_rect[i].rect.HasIntersection(&rect) {
+				targets_rect[i].target.dead = true
+
+				rect_dy *= -1
+				rect_ny = rect_y + rect_dy*RECT_SPEED*DELTA_TIME_SEC
+			}
+		}
 		if rect_ny < 0 || rect_ny+RECT_SIZE > WINDOW_HEIGHT || bar_rect.HasIntersection(&rect) {
 			rect_dy *= -1
 			rect_ny = rect_y + rect_dy*RECT_SPEED*DELTA_TIME_SEC
