@@ -41,15 +41,19 @@ func create_target_rect() [5][5]Target {
 	return target_pool
 }
 
-func draw_target_rect(target_pool [5][5]Target, renderer *sdl.Renderer) {
-	fmt.Println(target_pool)
+func draw_target_rect(target_pool *[5][5]Target, renderer *sdl.Renderer) []sdl.Rect {
+	targets_rect := []sdl.Rect{}
 	for j := 1; j < 5; j++ {
 		for i := 0; i < 5; i++ {
-			target_rect := create_rect(float32(target_pool[i][j].x), float32(target_pool[i][j].y), TARGET_WIDTH, BAR_THIKNESS)
-			renderer.SetDrawColor(0x00, 0xFF, 0x00, 0xFF)
-			renderer.FillRect(&target_rect)
+			if target_pool[i][j].dead == false {
+				target_rect := create_rect(float32(target_pool[i][j].x), float32(target_pool[i][j].y), TARGET_WIDTH, BAR_THIKNESS)
+				renderer.SetDrawColor(0x00, 0xFF, 0x00, 0xFF)
+				renderer.FillRect(&target_rect)
+				targets_rect = append(targets_rect, target_rect)
+			}
 		}
 	}
+	return targets_rect
 }
 
 func main() {
@@ -60,7 +64,7 @@ func main() {
 	}
 	defer sdl.Quit()
 
-	window, err := sdl.CreateWindow("test", sdl.WINDOWPOS_UNDEFINED, sdl.WINDOWPOS_UNDEFINED,
+	window, err := sdl.CreateWindow("Pong game", sdl.WINDOWPOS_UNDEFINED, sdl.WINDOWPOS_UNDEFINED,
 		WINDOW_WIDTH, WINDOW_HEIGHT, sdl.WINDOW_SHOWN)
 	if err != nil {
 		panic(err)
@@ -105,7 +109,7 @@ func main() {
 		renderer.SetDrawColor(0x18, 0x18, 0x18, 0xFF)
 		renderer.Clear()
 
-		draw_target_rect(target_pool, renderer)
+		targets_rect := draw_target_rect(&target_pool, renderer)
 
 		var rect = create_rect(rect_x, rect_y, RECT_SIZE, RECT_SIZE)
 		renderer.SetDrawColor(0xFF, 0xFF, 0xFF, 0xFF)
@@ -116,6 +120,8 @@ func main() {
 		renderer.FillRect(&bar_rect)
 
 		rect_nx := rect_x + rect_dx*RECT_SPEED*DELTA_TIME_SEC
+		fmt.Println(targets_rect)
+
 		rect = create_rect(rect_nx, rect_y, RECT_SIZE, RECT_SIZE)
 		if rect_nx < 0 || rect_nx+RECT_SIZE > WINDOW_WIDTH || bar_rect.HasIntersection(&rect) {
 			rect_dx *= -1
